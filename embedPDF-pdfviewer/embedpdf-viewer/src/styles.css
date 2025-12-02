@@ -1,0 +1,25 @@
+css
+:root{ --bg:#ffffff; --muted:#666; --accent:#2563eb }
+*{box-sizing:border-box}
+body,html,#root{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+.app-shell{display:flex;flex-direction:column;min-height:100vh}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #eee;background:#fff}
+.logo{font-weight:700}
+.upload-btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+.app-main{flex:1;display:flex;align-items:stretch;padding:12px}
+.placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);border:2px dashed #eee;border-radius:8px}
+.viewer-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pdf-viewer-root{display:flex;flex-direction:column;height:100%;width:100%}
+.toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid #eee;background:#fafafa}
+.toolbar-group{display:flex;align-items:center;gap:8px}
+.viewer-body{display:flex;flex:1;min-height:0}
+.thumbnail-column{width:200px;border-right:1px solid #f0f0f0;overflow:auto}
+.viewport-column{flex:1;display:flex;flex-direction:column;min-height:0}
+.filepicker-row{padding:8px;border-bottom:1px solid #f0f0f0}
+.app-footer{padding:8px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid #eee}
+
+/* Responsive */
+@media (max-width:800px){.thumbnail-column{display:none}.toolbar{flex-wrap:wrap}}
+
