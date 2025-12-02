@@ -16,10 +16,10 @@ import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react'; // 
 
 export const useViewerPlugins = (fileUrl) => {
   return [
-    // 1. Core Logic & Interaction (Must be registered early)
+    //  Core Logic & Interaction (Must be registered early)
     createPluginRegistration(InteractionManagerPluginPackage),
     
-    // 2. Data Loading
+    // Data Loading
     createPluginRegistration(LoaderPluginPackage, {
       loadingOptions: {
         type: 'url',
@@ -30,13 +30,13 @@ export const useViewerPlugins = (fileUrl) => {
       },
     }),
 
-    // 3. Viewport & Rendering
+    //  Viewport & Rendering
     createPluginRegistration(ViewportPluginPackage),
     createPluginRegistration(ScrollPluginPackage),
     createPluginRegistration(RenderPluginPackage),
     createPluginRegistration(TilingPluginPackage),
     
-    // 4. Feature Capabilities
+    //  Feature Capabilities
     createPluginRegistration(ZoomPluginPackage, { defaultZoomLevel: 1.0 }),
     createPluginRegistration(RotatePluginPackage),
     createPluginRegistration(ThumbnailPluginPackage),
