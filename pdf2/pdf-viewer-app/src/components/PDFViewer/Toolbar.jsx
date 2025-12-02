@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useZoom } from '@embedpdf/plugin-zoom/react';
 import { useViewportCapability } from '@embedpdf/plugin-viewport/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
+import { useSelectionCapability } from '@embedpdf/plugin-selection/react'; // 1. New Import
 import { 
   ZoomIn, 
   ZoomOut, 
   ArrowUpToLine, 
   ArrowDownToLine,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Copy // 2. New Icon
 } from 'lucide-react';
 
 export const Toolbar = () => {
@@ -16,17 +18,26 @@ export const Toolbar = () => {
   const { provides: zoomProvides, state: zoomState } = useZoom();
   const { provides: viewport } = useViewportCapability();
   const { provides: scroll, state: scrollState } = useScroll();
+  const { provides: selection } = useSelectionCapability(); // 3. Access Selection
 
   // Local state for the page input box
   const [pageInput, setPageInput] = useState(1);
+  const [hasSelection, setHasSelection] = useState(false); // 4. Track if text is selected
 
   // Sync the input box whenever the actual page changes
   useEffect(() => {
     if (scrollState?.currentPage !== undefined) {
-      // API uses 0-based index, UI uses 1-based index
       setPageInput(scrollState.currentPage + 1); 
     }
   }, [scrollState?.currentPage]);
+
+  // 5. Monitor Selection Changes
+  useEffect(() => {
+    if (!selection) return;
+    return selection.onSelectionChange((sel) => {
+      setHasSelection(!!sel); // Enable button if selection exists
+    });
+  }, [selection]);
 
   // Ensure plugins are ready
   if (!zoomProvides || !scroll) return null;
@@ -38,12 +49,10 @@ export const Toolbar = () => {
       const pageNumber = parseInt(e.target.value, 10);
       const totalPages = scrollState?.totalPages || 0;
 
-      // Validate page number
       if (pageNumber > 0 && pageNumber <= totalPages) {
-        scroll.jumpToPage(pageNumber - 1); // Jump to 0-based index
-        e.target.blur(); // Remove focus
+        scroll.jumpToPage(pageNumber - 1);
+        e.target.blur();
       } else {
-        // Reset if invalid
         setPageInput((scrollState?.currentPage ?? 0) + 1);
       }
     }
@@ -52,7 +61,11 @@ export const Toolbar = () => {
   const handleScrollToTop = () => viewport?.scrollTo({ x: 0, y: 0, behavior: 'smooth' });
   const handleScrollToBottom = () => viewport?.scrollTo({ x: 0, y: 999999, behavior: 'smooth' });
 
-  // Safe access to state values
+  // 6. Copy Handler
+  const handleCopy = () => {
+    selection?.copyToClipboard();
+  };
+
   const currentPage = scrollState?.currentPage ?? 0;
   const totalPages = scrollState?.totalPages ?? 0;
 
@@ -101,7 +114,7 @@ export const Toolbar = () => {
           </button>
         </div>
 
-        {/* Viewport Scrolling (Top/Bottom) */}
+        {/* Viewport Scrolling */}
         <div className="flex items-center space-x-1 pl-2">
           <button onClick={handleScrollToTop} className="p-1 hover:bg-white rounded-md text-gray-700" title="Scroll to Top">
             <ArrowUpToLine size={16} />
@@ -112,8 +125,23 @@ export const Toolbar = () => {
         </div>
       </div>
 
-      {/* RIGHT: Zoom Controls & Reset */}
+      {/* RIGHT: Tools & Zoom */}
       <div className="flex items-center space-x-2 w-1/4 justify-end">
+        {/* Copy Button */}
+        <button 
+          onClick={handleCopy}
+          disabled={!hasSelection}
+          className={`p-2 rounded-md transition-colors flex items-center space-x-1 ${
+            hasSelection 
+              ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
+              : 'text-gray-300 cursor-not-allowed'
+          }`}
+          title="Copy Selected Text"
+        >
+          <Copy size={18} />
+          {hasSelection && <span className="text-xs font-semibold">Copy</span>}
+        </button>
+
         <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
           <button onClick={() => zoomProvides.zoomOut()} className="p-2 hover:bg-white rounded-md transition-colors text-gray-700" title="Zoom Out">
             <ZoomOut size={18} />

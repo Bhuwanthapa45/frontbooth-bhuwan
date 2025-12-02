@@ -4,7 +4,8 @@ import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { Scroller } from '@embedpdf/plugin-scroll/react';
 import { RenderLayer } from '@embedpdf/plugin-render/react';
-import { SelectionLayer } from '@embedpdf/plugin-selection/react'; // Add selection layer
+import { SelectionLayer } from '@embedpdf/plugin-selection/react'; 
+import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react'; // 1. New Import
 
 import { useViewerPlugins } from '../../hooks/useViewerPlugins';
 import { Toolbar } from './Toolbar';
@@ -36,11 +37,20 @@ export const ViewerContainer = ({ fileUrl }) => {
           {/* Main Viewport Area */}
           <div className="flex-1 relative bg-gray-100">
             <Viewport>
-              <Scroller renderPage={({ width, height, pageIndex, scale }) => (
+              <Scroller renderPage={({ width, height, pageIndex, scale, rotation }) => (
                 <div style={{ width, height }} className="relative shadow-md mb-4 bg-white">
-                  {/* Layers are stacked: Render (image) -> Selection (text) */}
-                  <RenderLayer pageIndex={pageIndex} scale={scale} />
-                  <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                  {/* 4. PagePointerProvider enables mouse tracking for Selection */}
+                  <PagePointerProvider 
+                    width={width} 
+                    height={height} 
+                    pageIndex={pageIndex} 
+                    scale={scale} 
+                    rotation={rotation}
+                  >
+                    {/* Layers are stacked: Render (image) -> Selection (text) */}
+                    <RenderLayer pageIndex={pageIndex} scale={scale} />
+                    <SelectionLayer pageIndex={pageIndex} scale={scale} />
+                  </PagePointerProvider>
                 </div>
               )} />
             </Viewport>

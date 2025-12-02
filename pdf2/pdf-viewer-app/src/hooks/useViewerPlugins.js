@@ -43,7 +43,9 @@ export const useViewerPlugins = (fileUrl) => {
     createPluginRegistration(SelectionPluginPackage), 
     createPluginRegistration(SearchPluginPackage),
     createPluginRegistration(PrintPluginPackage),
-    createPluginRegistration(ExportPluginPackage),
+    createPluginRegistration(ExportPluginPackage, {
+        defaultFileName: 'frontboothdoc.pdf',
+    }),
     createPluginRegistration(AnnotationPluginPackage),
   ];
 };
