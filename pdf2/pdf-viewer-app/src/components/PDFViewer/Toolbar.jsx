@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useZoom } from '@embedpdf/plugin-zoom/react';
 import { useViewportCapability } from '@embedpdf/plugin-viewport/react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
-import { useSelectionCapability } from '@embedpdf/plugin-selection/react'; // 1. New Import
+import { useSelectionCapability } from '@embedpdf/plugin-selection/react'; 
+import { useExportCapability } from '@embedpdf/plugin-export/react';
+
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -18,6 +20,8 @@ export const Toolbar = () => {
   const { provides: zoomProvides, state: zoomState } = useZoom();
   const { provides: viewport } = useViewportCapability();
   const { provides: scroll, state: scrollState } = useScroll();
+  const { provides: exportApi } = useExportCapability();
+ 
   const { provides: selection } = useSelectionCapability(); // 3. Access Selection
 
   // Local state for the page input box
@@ -160,6 +164,9 @@ export const Toolbar = () => {
         >
           Reset
         </button>
+        <button onClick={() => exportApi?.download()} disabled={!exportApi}>
+      Download
+    </button>
       </div>
     </div>
   );
