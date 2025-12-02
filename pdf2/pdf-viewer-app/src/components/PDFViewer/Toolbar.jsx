@@ -1,86 +1,134 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useZoom } from '@embedpdf/plugin-zoom/react';
-import { useViewportCapability } from '@embedpdf/plugin-viewport/react'; // 1. New Import
+import { useViewportCapability } from '@embedpdf/plugin-viewport/react';
+import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { 
   ZoomIn, 
   ZoomOut, 
-  ArrowUpToLine,   // New Icon
-  ArrowDownToLine  // New Icon
+  ArrowUpToLine, 
+  ArrowDownToLine,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export const Toolbar = () => {
-  // Access Zoom State
+  // --- Hooks ---
   const { provides: zoomProvides, state: zoomState } = useZoom();
-  
-  // 2. Access Viewport Capabilities (for scrolling)
   const { provides: viewport } = useViewportCapability();
+  const { provides: scroll, state: scrollState } = useScroll();
 
-  if (!zoomProvides) return null;
+  // Local state for the page input box
+  const [pageInput, setPageInput] = useState(1);
 
-  // 3. Helper functions for Programmatic Scrolling
-  const handleScrollToTop = () => {
-    // Scroll to X:0, Y:0 (Top Left)
-    viewport?.scrollTo({ x: 0, y: 0, behavior: 'smooth' });
+  // Sync the input box whenever the actual page changes
+  useEffect(() => {
+    if (scrollState?.currentPage !== undefined) {
+      // API uses 0-based index, UI uses 1-based index
+      setPageInput(scrollState.currentPage + 1); 
+    }
+  }, [scrollState?.currentPage]);
+
+  // Ensure plugins are ready
+  if (!zoomProvides || !scroll) return null;
+
+  // --- Handlers ---
+
+  const handlePageInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const pageNumber = parseInt(e.target.value, 10);
+      const totalPages = scrollState?.totalPages || 0;
+
+      // Validate page number
+      if (pageNumber > 0 && pageNumber <= totalPages) {
+        scroll.jumpToPage(pageNumber - 1); // Jump to 0-based index
+        e.target.blur(); // Remove focus
+      } else {
+        // Reset if invalid
+        setPageInput((scrollState?.currentPage ?? 0) + 1);
+      }
+    }
   };
 
-  const handleScrollToBottom = () => {
-    // Scroll to a large Y value to hit the bottom
-    viewport?.scrollTo({ x: 0, y: 999999, behavior: 'smooth' });
-  };
+  const handleScrollToTop = () => viewport?.scrollTo({ x: 0, y: 0, behavior: 'smooth' });
+  const handleScrollToBottom = () => viewport?.scrollTo({ x: 0, y: 999999, behavior: 'smooth' });
+
+  // Safe access to state values
+  const currentPage = scrollState?.currentPage ?? 0;
+  const totalPages = scrollState?.totalPages ?? 0;
 
   return (
     <div className="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-4 shadow-sm z-10 relative">
       {/* LEFT: Title */}
-      <div className="flex items-center space-x-2">
-        <span className="font-bold text-gray-700 text-lg">PDF Viewer</span>
+      <div className="flex items-center space-x-2 w-1/4">
+        <span className="font-bold text-gray-700 text-lg hidden md:block">PDF Viewer</span>
       </div>
 
-      {/* CENTER: Navigation Controls (New Feature) */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-        <button 
-          onClick={handleScrollToTop}
-          className="flex items-center space-x-1 px-3 py-1 hover:bg-white rounded-md transition-colors text-gray-700 text-sm font-medium"
-          title="Scroll to Top"
-        >
-          <ArrowUpToLine size={16} />
-          <span>Top</span>
-        </button>
-        <div className="w-px h-4 bg-gray-300 mx-1"></div>
-        <button 
-          onClick={handleScrollToBottom}
-          className="flex items-center space-x-1 px-3 py-1 hover:bg-white rounded-md transition-colors text-gray-700 text-sm font-medium"
-          title="Scroll to Bottom"
-        >
-          <span>Bottom</span>
-          <ArrowDownToLine size={16} />
-        </button>
+      {/* CENTER: Navigation Group */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center bg-gray-100 rounded-lg p-1 shadow-inner">
+        
+        {/* Page Navigation Section */}
+        <div className="flex items-center space-x-1 pr-2 border-r border-gray-300">
+          <button 
+            onClick={() => scroll.scrollToPreviousPage()}
+            disabled={currentPage === 0}
+            className="p-1 hover:bg-white rounded-md disabled:opacity-30 text-gray-700"
+            title="Previous Page"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            <span className="text-gray-500 text-sm pl-1">Page</span>
+            <input 
+              type="number"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onKeyDown={handlePageInputKeyDown}
+              className="w-12 text-center text-sm font-medium bg-transparent border-b border-gray-400 focus:border-blue-500 focus:outline-none no-spinners"
+            />
+            <span className="text-gray-500 text-sm">
+              of {totalPages}
+            </span>
+          </div>
+
+          <button 
+            onClick={() => scroll.scrollToNextPage()}
+            disabled={currentPage === totalPages - 1}
+            className="p-1 hover:bg-white rounded-md disabled:opacity-30 text-gray-700"
+            title="Next Page"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        {/* Viewport Scrolling (Top/Bottom) */}
+        <div className="flex items-center space-x-1 pl-2">
+          <button onClick={handleScrollToTop} className="p-1 hover:bg-white rounded-md text-gray-700" title="Scroll to Top">
+            <ArrowUpToLine size={16} />
+          </button>
+          <button onClick={handleScrollToBottom} className="p-1 hover:bg-white rounded-md text-gray-700" title="Scroll to Bottom">
+            <ArrowDownToLine size={16} />
+          </button>
+        </div>
       </div>
 
       {/* RIGHT: Zoom Controls & Reset */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 w-1/4 justify-end">
         <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-          <button 
-            onClick={zoomProvides.zoomOut}
-            className="p-2 hover:bg-white rounded-md transition-colors text-gray-700"
-            title="Zoom Out"
-          >
+          <button onClick={() => zoomProvides.zoomOut()} className="p-2 hover:bg-white rounded-md transition-colors text-gray-700" title="Zoom Out">
             <ZoomOut size={18} />
           </button>
-          <span className="w-16 text-center text-sm font-medium text-gray-600">
+          <span className="w-14 text-center text-sm font-medium text-gray-600">
             {Math.round(zoomState.currentZoomLevel * 100)}%
           </span>
-          <button 
-            onClick={zoomProvides.zoomIn}
-            className="p-2 hover:bg-white rounded-md transition-colors text-gray-700"
-            title="Zoom In"
-          >
+          <button onClick={() => zoomProvides.zoomIn()} className="p-2 hover:bg-white rounded-md transition-colors text-gray-700" title="Zoom In">
             <ZoomIn size={18} />
           </button>
         </div>
 
         <button 
           onClick={() => zoomProvides.requestZoom(1.0)}
-          className="p-2 hover:bg-gray-100 rounded-md text-gray-600 text-sm font-medium"
+          className="p-2 hover:bg-gray-100 rounded-md text-gray-600 text-sm font-medium hidden lg:block"
         >
           Reset
         </button>
