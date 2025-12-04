@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  gotenberg:
+    image: thecodingmachine/gotenberg:7
+    container_name: gotenberg
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    environment:
+      - GOTENBERG_DISABLE_ACCESS_LOG=true
+    # optional: limit resources in production
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 2G
